@@ -29,17 +29,21 @@
       text-align: center;
     }
     #reset button {
-      background: rgba(0, 0, 0, 0.4);
+      /* 
+      */
+      background: rgba(0, 0, 0, 0.0);
       border: 0;
       color: white;
-      font-size: 12pt;
+      font-family: Indie Flower, sans-serif;
+      font-size: 16pt;
       margin: auto;
       width: 120px;
       height: 30px;
       cursor: pointer;
     }
     #reset button:active {
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.1);
+      transform: scale(0.90);
     }
     
     #stack {
@@ -131,7 +135,7 @@
   <div id='stack'></div>
 
   <script>
-    const DEFAULT_PARAM = 'rtgerg413';
+    const DEFAULT_PARAM = '1TY7jUfTmgfEwjvZ1jKrUJJt8a0E-DYG3w-GisO_H3O8';
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id') || DEFAULT_PARAM;
     console.log('id:', id);
