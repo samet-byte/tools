@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flash Cards</title>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Indie+Flower'>
+  <style>
+    body {
+      /*
+      background: linear-gradient(to bottom, #420, #000);
+      background: linear-gradient(to bottom, #420, #6c5ce7);
+      */
+      
+      background: linear-gradient(to bottom, #420, #6c5ce7);
+
+
+      font-family: Indie Flower, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items:center;
+      justify-content:flex-end;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    
+    #reset {
+      text-align: center;
+    }
+    #reset button {
+      background: rgba(0, 0, 0, 0.4);
+      border: 0;
+      color: white;
+      font-size: 12pt;
+      margin: auto;
+      width: 120px;
+      height: 30px;
+      cursor: pointer;
+    }
+    #reset button:active {
+      background: rgba(0, 0, 0, 0.8);
+    }
+    
+    #stack {
+      margin: auto;
+      position: relative;
+      width: 300px;
+      height: 200px;
+      align-items: flex-end;
+      justify-content: flex-end;
+    }
+    
+    .card {
+      border: 1px solid #888;
+      position: absolute;
+      width: 300px;
+      height: 180px;
+      transform-origin: 0% 0%;
+      cursor: pointer;
+    }
+    .card .front {
+      background: white;
+      font-size: 24pt;
+      position: absolute;
+      width: 300px;
+      height: 180px;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card .back {
+      background: white linear-gradient(transparent, transparent 20%, hotpink 20%, hotpink 21%, transparent 21%, transparent 31%, lightblue 31%, lightblue 32%, transparent 32%, transparent 42%, lightblue 42%, lightblue 43%, transparent 43%, transparent 53%, lightblue 53%, lightblue 54%, transparent 54%, transparent 64%, lightblue 64%, lightblue 65%, transparent 65%, transparent 75%, lightblue 75%, lightblue 76%, transparent 76%, transparent 86%, lightblue 86%, lightblue 87%, transparent 87%, transparent 97%);
+      font-size: 11pt;
+      position: absolute;
+      width: 300px;
+      height: 180px;
+      transform: rotateY(180deg);
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    
+    ._1 { top: 0px; right: 0px; z-index: 3; }
+    ._2 { top: 3px; right: 2px; z-index: 2; }
+    ._3 { top: 6px; right: 4px; z-index: 1; }
+    ._4 { top: 9px; right: 6px; z-index: 0; }
+    
+    .flipped {
+      transform: rotateY(180deg) translateX(30px);
+      animation: flip 1s;
+    }
+    
+    .showingBack {
+      animation: showBack 1s;
+    }
+    
+    @keyframes flip {
+      from { transform: rotateY(0deg) translateX(0px); }
+      to { transform: rotateY(180deg) translateX(30px); }
+    }
+    @keyframes showBack {
+      0% { z-index: 2; }
+      25% { z-index: 2; }
+      50% { z-index: 0; }
+    }
+
+    #loading, #error {
+      text-align: center;
+      color: white;
+      font-size: 18pt;
+      margin-top: 20px;
+    }
+
+    #error {
+      color: red;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <p id='reset'>
+    <button>Reset stack</button>
+  </p>
+  <div id='loading'>Loading...</div>
+  <div id='error'></div>
+  <div id='stack'></div>
+
+  <script>
+    const DEFAULT_PARAM = 'rtgerg413';
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id') || DEFAULT_PARAM;
+    console.log('id:', id);
+    const url = `https://g--s.vercel.app/api/v1?id=${id}`;
+    console.log('url:', url);
+
+    function createCards(data) {
+      const stack = document.getElementById('stack');
+      stack.innerHTML = '';
+      data.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = `card _${index + 1}`;
+        card.innerHTML = `
+          <div class='front'>${item.front}</div>
+          <div class='back'>${item.back}</div>
+        `;
+        stack.appendChild(card);
+      });
+    }
+
+    function initializeCards() {
+      const cards = document.querySelectorAll('.card');
+      const maxCards = cards.length;
+      
+      // turn card
+      cards.forEach(card => {
+        card.addEventListener('click', function() {
+          this.classList.add('flipped');
+          this.querySelector('.front').classList.add('showingBack');
+          this.querySelector('.front').style.zIndex = 0;
+          this.style.zIndex = maxCards;
+        });
+      });
+
+      // reset stack
+      document.querySelector('#reset button').addEventListener('click', function() {
+        cards.forEach((card, index) => {
+          card.classList.remove('flipped');
+          card.querySelector('.front').classList.remove('showingBack');
+          card.querySelector('.front').style.zIndex = 2;
+          card.style.zIndex = maxCards - index;
+        });
+      });
+
+      document.getElementById('loading').style.display = 'none';
+    }
+
+    // Fetch data from API
+    fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.data && Array.isArray(data.data)) {
+          createCards(data.data);
+          initializeCards();
+        } else {
+          throw new Error('Invalid data received from the server.');
+        }
+      })
+      .catch(error => {
+        document.getElementById('error').textContent = `Error: ${error.message}`;
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('loading').style.display = 'none';
+      });
+  </script>
+</body>
+</html>
